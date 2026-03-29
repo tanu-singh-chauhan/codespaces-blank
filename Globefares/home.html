@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyJoy Airlines</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
+    :root {
+      --background-color: #081120;
+      --surface-color: #10233f;
+      --text-color: #f8fbff;
+      --primary-action-color: #ffb703;
+      --secondary-action-color: #7bdff2;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Outfit', sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(123,223,242,0.18), transparent 22%),
+        radial-gradient(circle at 85% 15%, rgba(255,183,3,0.18), transparent 24%),
+        radial-gradient(circle at 60% 80%, rgba(255,255,255,0.08), transparent 20%),
+        linear-gradient(145deg, #081120 0%, #0d1b31 45%, #13294b 100%);
+      color: var(--text-color);
+      overflow: hidden;
+    }
+
+    .skyjoy-shell {
+      height: 100%;
+      width: 100%;
+      overflow: auto;
+      position: relative;
+    }
+
+    .starfield {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .starfield span {
+      position: absolute;
+      border-radius: 9999px;
+      background: rgba(255,255,255,0.75);
+      animation: drift linear infinite;
+    }
+
+    .plane-trail {
+      position: fixed;
+      top: 14%;
+      left: -15%;
+      width: 160px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
+      transform: rotate(-8deg);
+      animation: flyAcross 16s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .plane-trail::before {
+      content: '✈';
+      position: absolute;
+      right: -10px;
+      top: -13px;
+      font-size: 24px;
+      color: var(--secondary-action-color);
+      filter: drop-shadow(0 0 10px rgba(123,223,242,0.8));
+    }
+
+    .glass-card {
+      background: linear-gradient(180deg, rgba(16,35,63,0.92), rgba(9,20,37,0.82));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      backdrop-filter: blur(18px);
+    }
+
+    .soft-float {
+      animation: floaty 6s ease-in-out infinite;
+    }
+
+    .soft-float-delay {
+      animation: floaty 8s ease-in-out infinite;
+      animation-delay: 1s;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      animation: riseIn 0.9s ease forwards;
+    }
+
+    .nav-link.active {
+      background: rgba(255,255,255,0.14);
+      color: white;
+    }
+
+    .section-panel {
+      display: none;
+    }
+
+    .section-panel.active {
+      display: block;
+      animation: fadePanel 0.5s ease;
+    }
+
+    .destination-card:hover,
+    .blog-card:hover,
+    .career-card:hover,
+    .gallery-card:hover,
+    .payment-card:hover,
+    .order-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 24px 50px rgba(0,0,0,0.28);
+    }
+
+    .destination-card,
+    .blog-card,
+    .career-card,
+    .gallery-card,
+    .payment-card,
+    .order-card {
+      transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+    }
+
+    .pulse-ring {
+      animation: pulseRing 2.4s ease-out infinite;
+    }
+
+    .cloud {
+      position: absolute;
+      border-radius: 9999px;
+      opacity: 0.14;
+      filter: blur(2px);
+      animation: cloudMove linear infinite;
+    }
+
+    .ticket-cut::before,
+    .ticket-cut::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 9999px;
+      background: var(--background-color);
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .ticket-cut::before { left: -12px; }
+    .ticket-cut::after { right: -12px; }
+
+    .deal-badge {
+      box-shadow: 0 0 0 0 rgba(255,183,3,0.5);
+      animation: badgePop 2s infinite;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
+      display: inline-block;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.16);
+      border-radius: 9999px;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .primary-font {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    @keyframes floaty {
+      0%,100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes drift {
+      from { transform: translateY(0px); opacity: 0.15; }
+      50% { opacity: 0.95; }
+      to { transform: translateY(-18px); opacity: 0.15; }
+    }
+
+    @keyframes flyAcross {
+      0% { transform: translateX(0) rotate(-8deg); opacity: 0; }
+      7% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(140vw) rotate(-8deg); opacity: 0; }
+    }
+
+    @keyframes riseIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadePanel {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(123,223,242,0.45); }
+      70% { box-shadow: 0 0 0 16px rgba(123,223,242,0); }
+      100% { box-shadow: 0 0 0 0 rgba(123,223,242,0); }
+    }
+
+    @keyframes badgePop {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    @keyframes cloudMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(160px); }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div class="skyjoy-shell w-full custom-scroll" id="app">
+   <div class="starfield" aria-hidden="true" id="starfield"></div>
+   <div class="plane-trail" aria-hidden="true"></div>
+   <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div class="cloud bg-white w-32 h-10 top-28 left-[8%]" style="animation-duration: 14s;"></div>
+    <div class="cloud bg-white w-44 h-14 top-56 right-[16%]" style="animation-duration: 20s;"></div>
+    <div class="cloud bg-white w-28 h-9 top-[30%] left-[68%]" style="animation-duration: 18s;"></div>
+   </div>
+   <header class="relative z-10 px-4 sm:px-6 lg:px-10 pt-5">
+    <div class="max-w-7xl mx-auto glass-card rounded-[28px] px-4 sm:px-6 py-4">
+     <div class="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-2xl flex items-center justify-center pulse-ring" id="brandMarkWrap">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-slate-900 font-black text-lg" id="brandMark">
+         SJ
+        </div>
+       </div>
+       <div>
+        <div class="font-extrabold tracking-[0.28em] text-xs uppercase opacity-70 primary-font">
+         SkyJoy Airlines
+        </div>
+        <div class="text-sm opacity-80 primary-font">
+         Dreamy routes, breezy journeys
+        </div>
+       </div>
+      </div>
+      <nav class="flex flex-wrap gap-2" aria-label="Main navigation"><button class="nav-link active px-3 py-2 rounded-full text-sm transition primary-font" data-section="home">Home</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="destinations">Destinations</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="gallery">Gallery</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="about">About</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="careers">Careers</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="blogs">Blogs</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="payments">Payments</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="orders">Orders</button> <button class="nav-link px-3 py-2 rounded-full text-sm transition primary-font" data-section="status">Status</button>
+      </nav>
+     </div>
+    </div>
+   </header>
+   <main class="relative z-10 px-4 sm:px-6 lg:px-10 pb-8 pt-6">
+    <div class="max-w-7xl mx-auto space-y-8">
+     <section id="home" class="section-panel active">
+      <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 items-stretch">
+       <div class="glass-card rounded-[34px] p-6 sm:p-8 lg:p-10 overflow-hidden relative">
+        <div class="absolute -right-10 top-10 w-40 h-40 rounded-full blur-3xl opacity-30" id="heroOrbOne"></div>
+        <div class="absolute left-0 bottom-0 w-44 h-44 rounded-full blur-3xl opacity-20" id="heroOrbTwo"></div>
+        <div class="relative">
+         <p class="uppercase tracking-[0.35em] text-xs sm:text-sm opacity-75 reveal primary-font">Playful journeys • Sunny skies • Smooth booking</p>
+         <h1 id="heroTitle" class="hero-title reveal text-5xl sm:text-6xl lg:text-7xl leading-none mt-4 max-w-2xl" style="animation-delay:0.1s;">Book your next sky adventure</h1>
+         <p id="heroSubtitle" class="reveal mt-5 text-base sm:text-lg max-w-2xl opacity-85 primary-font" style="animation-delay:0.2s;">Explore handpicked destinations, dreamy travel galleries, and a cheerful booking flow made for modern travelers.</p>
+         <div class="reveal flex flex-wrap gap-3 mt-8" style="animation-delay:0.3s;"><button id="primaryCta" class="px-6 py-3 rounded-full font-semibold text-slate-900 transition hover:scale-[1.03] focus:outline-none focus:ring-4 focus:ring-white/30 primary-font"> Explore Flights </button> <button id="secondaryCta" class="px-6 py-3 rounded-full font-semibold border border-white/20 hover:bg-white/10 transition focus:outline-none focus:ring-4 focus:ring-white/20 primary-font"> View Deals </button>
+         </div>
+         <div class="grid sm:grid-cols-3 gap-4 mt-10">
+          <div class="glass-card rounded-3xl p-4 soft-float reveal" style="animation-delay:0.4s;">
+           <div class="flex items-center gap-3"><i data-lucide="globe-2" class="w-5 h-5"></i> <span class="font-semibold primary-font">120+ Routes</span>
+           </div>
+           <p class="mt-2 text-sm opacity-75 primary-font">Weekend escapes, city breaks, tropical stays.</p>
+          </div>
+          <div class="glass-card rounded-3xl p-4 soft-float-delay reveal" style="animation-delay:0.5s;">
+           <div class="flex items-center gap-3"><i data-lucide="sparkles" class="w-5 h-5"></i> <span class="font-semibold primary-font">Joyful Service</span>
+           </div>
+           <p class="mt-2 text-sm opacity-75 primary-font">Friendly cabin vibes and easy-to-use trip tools.</p>
+          </div>
+          <div class="glass-card rounded-3xl p-4 soft-float reveal" style="animation-delay:0.6s;">
+           <div class="flex items-center gap-3"><i data-lucide="badge-percent" class="w-5 h-5"></i> <span class="font-semibold primary-font">Flash Deals</span>
+           </div>
+           <p class="mt-2 text-sm opacity-75 primary-font">Catch special offers before they fly away.</p>
+          </div>
+         </div>
+        </div>
+       </div>
+       <aside class="glass-card rounded-[34px] p-5 sm:p-6 lg:p-7">
+        <div class="flex items-center justify-between gap-4">
+         <div>
+          <h2 class="text-2xl font-bold primary-font">Quick booking</h2>
+          <p class="text-sm opacity-75 mt-1 primary-font">Build a sample trip in seconds</p>
+         </div>
+         <div class="deal-badge px-3 py-1 rounded-full text-xs font-semibold text-slate-900" id="hotDealBadge">
+          HOT DEAL
+         </div>
+        </div>
+        <form id="bookingForm" class="mt-6 space-y-4">
+         <div><label for="fromCity" class="block text-sm mb-2 font-medium primary-font">From</label> <select id="fromCity" class="w-full rounded-2xl px-4 py-3 bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-4 focus:ring-white/20"> <option value="Singapore" class="text-slate-900">Singapore</option> <option value="Dubai" class="text-slate-900">Dubai</option> <option value="London" class="text-slate-900">London</option> <option value="Tokyo" class="text-slate-900">Tokyo</option> </select>
+         </div>
+         <div><label for="toCity" class="block text-sm mb-2 font-medium primary-font">To</label> <select id="toCity" class="w-full rounded-2xl px-4 py-3 bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-4 focus:ring-white/20"> <option value="Bali" class="text-slate-900">Bali</option> <option value="Paris" class="text-slate-900">Paris</option> <option value="Santorini" class="text-slate-900">Santorini</option> <option value="Seoul" class="text-slate-900">Seoul</option> <option value="Maldives" class="text-slate-900">Maldives</option> <option value="New York" class="text-slate-900">New York</option> </select>
+         </div>
+         <div class="grid sm:grid-cols-2 gap-4">
+          <div><label for="departDate" class="block text-sm mb-2 font-medium primary-font">Departure</label> <input id="departDate" type="date" class="w-full rounded-2xl px-4 py-3 bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-4 focus:ring-white/20">
+          </div>
+          <div><label for="travelers" class="block text-sm mb-2 font-medium primary-font">Travelers</label> <select id="travelers" class="w-full rounded-2xl px-4 py-3 bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-4 focus:ring-white/20"> <option value="1" class="text-slate-900">1 Traveler</option> <option value="2" class="text-slate-900">2 Travelers</option> <option value="3" class="text-slate-900">3 Travelers</option> <option value="4" class="text-slate-900">4 Travelers</option> </select>
+          </div>
+         </div><button type="submit" id="searchButton" class="w-full rounded-2xl py-3 font-bold text-slate-900 transition hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-white/25 primary-font"> Find Flights </button>
+        </form>
+        <div id="bookingResult" class="mt-5 hidden rounded-3xl border border-white/10 bg-white/5 p-4">
+         <div class="flex items-start justify-between gap-4">
+          <div>
+           <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">Sample booking created</p>
+           <h3 id="resultRoute" class="text-xl font-bold mt-2 primary-font"></h3>
+           <p id="resultMeta" class="text-sm opacity-75 mt-1 primary-font"></p>
+          </div>
+          <div class="text-right">
+           <p class="text-xs opacity-65 primary-font">Starting from</p>
+           <p id="resultPrice" class="text-2xl font-extrabold primary-font"></p>
+          </div>
+         </div>
+         <div class="flex flex-wrap gap-3 mt-4"><button id="saveOrderBtn" class="px-4 py-2 rounded-full text-slate-900 font-semibold primary-font">Save to Orders</button> <button id="trackTripBtn" class="px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 primary-font">Track Sample Status</button>
+         </div>
+        </div>
+        <p class="mt-4 text-xs opacity-60 leading-relaxed primary-font">Demo booking flow for preview purposes. Payments are shown as info cards only, and no real payment is processed on this page.</p>
+       </aside>
+      </div>
+      <div class="grid lg:grid-cols-[1fr_1fr] gap-6 mt-8">
+       <div class="glass-card rounded-[30px] p-6">
+        <div class="flex items-center justify-between gap-4">
+         <div>
+          <h2 class="text-2xl font-bold primary-font">Recommended escapes</h2>
+          <p class="text-sm opacity-75 mt-1 primary-font">Fresh picks travelers love right now</p>
+         </div><button class="px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font" data-section-jump="destinations">See all</button>
+        </div>
+        <div id="recommendationList" class="grid sm:grid-cols-2 gap-4 mt-5"></div>
+       </div>
+       <div class="glass-card rounded-[30px] p-6">
+        <div class="flex items-center justify-between gap-4">
+         <div>
+          <h2 class="text-2xl font-bold primary-font">Skyline gallery</h2>
+          <p class="text-sm opacity-75 mt-1 primary-font">Colorful moments from dreamy routes</p>
+         </div><button class="px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font" data-section-jump="gallery">Open gallery</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-5">
+         <div class="gallery-card rounded-[26px] p-4 h-40 flex items-end bg-gradient-to-br from-cyan-300/30 via-sky-400/20 to-blue-700/30 border border-white/10">
+          <div>
+           <p class="text-xs uppercase opacity-70 primary-font">Bali</p>
+           <h3 class="font-bold text-lg primary-font">Sunrise coast</h3>
+          </div>
+         </div>
+         <div class="gallery-card rounded-[26px] p-4 h-40 flex items-end bg-gradient-to-br from-amber-300/30 via-orange-300/20 to-pink-500/30 border border-white/10">
+          <div>
+           <p class="text-xs uppercase opacity-70 primary-font">Paris</p>
+           <h3 class="font-bold text-lg primary-font">Golden evenings</h3>
+          </div>
+         </div>
+         <div class="gallery-card rounded-[26px] p-4 h-40 flex items-end bg-gradient-to-br from-violet-300/30 via-fuchsia-300/20 to-indigo-600/30 border border-white/10">
+          <div>
+           <p class="text-xs uppercase opacity-70 primary-font">Seoul</p>
+           <h3 class="font-bold text-lg primary-font">Neon nights</h3>
+          </div>
+         </div>
+         <div class="gallery-card rounded-[26px] p-4 h-40 flex items-end bg-gradient-to-br from-emerald-300/30 via-teal-300/20 to-cyan-700/30 border border-white/10">
+          <div>
+           <p class="text-xs uppercase opacity-70 primary-font">Maldives</p>
+           <h3 class="font-bold text-lg primary-font">Lagoon glow</h3>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section id="destinations" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+         <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Destinations</p>
+         <h2 class="text-4xl font-bold mt-2 primary-font">Choose your next favorite place</h2>
+         <p class="mt-2 opacity-75 max-w-2xl primary-font">Browse playful travel picks with quick highlights, prices, and mood-based recommendations.</p>
+        </div>
+        <div class="flex gap-2 flex-wrap"><button class="filter-btn px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font active" data-filter="all">All</button> <button class="filter-btn px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font" data-filter="beach">Beach</button> <button class="filter-btn px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font" data-filter="city">City</button> <button class="filter-btn px-4 py-2 rounded-full border border-white/15 hover:bg-white/10 transition primary-font" data-filter="romance">Romance</button>
+        </div>
+       </div>
+       <div id="destinationGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mt-8"></div>
+      </div>
+     </section>
+     <section id="gallery" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+         <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Gallery</p>
+         <h2 class="text-4xl font-bold mt-2 primary-font">A postcard wall in motion</h2>
+         <p class="mt-2 opacity-75 max-w-2xl primary-font">A lively visual gallery made with colorful travel-inspired cards and soft floating motion.</p>
+        </div><button id="shuffleGalleryBtn" class="px-5 py-3 rounded-full font-semibold text-slate-900 hover:scale-[1.03] transition primary-font">Shuffle gallery</button>
+       </div>
+       <div id="galleryGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8"></div>
+      </div>
+     </section>
+     <section id="about" class="section-panel">
+      <div class="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
+       <div class="glass-card rounded-[34px] p-6 sm:p-8">
+        <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">About us</p>
+        <h2 id="aboutTitle" class="text-4xl font-bold mt-2 primary-font">Why travelers love flying with us</h2>
+        <p id="aboutText" class="mt-4 opacity-80 leading-7 primary-font">SkyJoy Airlines is designed around breezy planning, cheerful experiences, and feel-good travel moments from takeoff to touchdown.</p>
+        <div class="mt-6 grid gap-4">
+         <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+          <h3 class="font-semibold primary-font">Playful service design</h3>
+          <p class="text-sm opacity-75 mt-1 primary-font">Friendly screens, delightful details, and a smooth passenger journey.</p>
+         </div>
+         <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+          <h3 class="font-semibold primary-font">Flexible travel ideas</h3>
+          <p class="text-sm opacity-75 mt-1 primary-font">Get destination suggestions matched to your mood and travel style.</p>
+         </div>
+         <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+          <h3 class="font-semibold primary-font">Always responsive</h3>
+          <p class="text-sm opacity-75 mt-1 primary-font">Great on desktop, tablet, and mobile with clean layouts throughout.</p>
+         </div>
+        </div>
+       </div>
+       <div class="glass-card rounded-[34px] p-6 sm:p-8">
+        <h3 class="text-2xl font-bold primary-font">What makes SkyJoy different</h3>
+        <div class="grid sm:grid-cols-2 gap-4 mt-6">
+         <div class="rounded-[28px] p-5 border border-white/10 bg-gradient-to-br from-white/10 to-white/5"><i data-lucide="ticket" class="w-7 h-7 mb-4"></i>
+          <h4 class="font-semibold primary-font">Fast booking flow</h4>
+          <p class="text-sm opacity-75 mt-2 primary-font">Make sample travel plans in a few taps with visual feedback.</p>
+         </div>
+         <div class="rounded-[28px] p-5 border border-white/10 bg-gradient-to-br from-white/10 to-white/5"><i data-lucide="map-pinned" class="w-7 h-7 mb-4"></i>
+          <h4 class="font-semibold primary-font">Curated places</h4>
+          <p class="text-sm opacity-75 mt-2 primary-font">Destinations are grouped by feeling, scenery, and traveler appeal.</p>
+         </div>
+         <div class="rounded-[28px] p-5 border border-white/10 bg-gradient-to-br from-white/10 to-white/5"><i data-lucide="camera" class="w-7 h-7 mb-4"></i>
+          <h4 class="font-semibold primary-font">Travel gallery</h4>
+          <p class="text-sm opacity-75 mt-2 primary-font">A vibrant section to inspire booking confidence and excitement.</p>
+         </div>
+         <div class="rounded-[28px] p-5 border border-white/10 bg-gradient-to-br from-white/10 to-white/5"><i data-lucide="plane-takeoff" class="w-7 h-7 mb-4"></i>
+          <h4 class="font-semibold primary-font">Live-style status tools</h4>
+          <p class="text-sm opacity-75 mt-2 primary-font">Search a sample flight code and see animated trip status results.</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section id="careers" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Careers</p>
+       <h2 class="text-4xl font-bold mt-2 primary-font">Join the joyful crew</h2>
+       <p class="mt-2 opacity-75 max-w-2xl primary-font">Explore playful aviation roles for people who love hospitality, design, and travel experiences.</p>
+       <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mt-8">
+        <div class="career-card rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <div class="flex items-center justify-between gap-3">
+          <h3 class="font-bold primary-font">Cabin Crew Host</h3><span class="px-3 py-1 rounded-full text-xs bg-white/10 primary-font">Full-time</span>
+         </div>
+         <p class="mt-3 text-sm opacity-75 primary-font">Bring warmth, comfort, and cheerful service to every cabin journey.</p><button class="career-apply-btn mt-5 px-4 py-2 rounded-full text-slate-900 font-semibold primary-font">Apply interest</button>
+        </div>
+        <div class="career-card rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <div class="flex items-center justify-between gap-3">
+          <h3 class="font-bold primary-font">Airport Experience Lead</h3><span class="px-3 py-1 rounded-full text-xs bg-white/10 primary-font">Hybrid</span>
+         </div>
+         <p class="mt-3 text-sm opacity-75 primary-font">Design smoother check-in and boarding moments for travelers.</p><button class="career-apply-btn mt-5 px-4 py-2 rounded-full text-slate-900 font-semibold primary-font">Apply interest</button>
+        </div>
+        <div class="career-card rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <div class="flex items-center justify-between gap-3">
+          <h3 class="font-bold primary-font">Travel Content Writer</h3><span class="px-3 py-1 rounded-full text-xs bg-white/10 primary-font">Remote</span>
+         </div>
+         <p class="mt-3 text-sm opacity-75 primary-font">Create destination stories, guides, and blog content with personality.</p><button class="career-apply-btn mt-5 px-4 py-2 rounded-full text-slate-900 font-semibold primary-font">Apply interest</button>
+        </div>
+       </div>
+       <div id="careerMessage" class="hidden mt-6 rounded-3xl border border-white/10 bg-white/5 p-4 primary-font"></div>
+      </div>
+     </section>
+     <section id="blogs" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+         <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Blogs</p>
+         <h2 class="text-4xl font-bold mt-2 primary-font">Travel stories and inspiration</h2>
+         <p class="mt-2 opacity-75 max-w-2xl primary-font">Browse quick reads packed with route ideas, packing thoughts, and destination moods.</p>
+        </div><button id="loadBlogBtn" class="px-5 py-3 rounded-full text-slate-900 font-semibold hover:scale-[1.03] transition primary-font">Show featured post</button>
+       </div>
+       <div class="grid lg:grid-cols-3 gap-5 mt-8">
+        <article class="blog-card rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">City Break</p>
+         <h3 class="mt-3 text-2xl font-bold primary-font">48 hours in Seoul</h3>
+         <p class="mt-3 text-sm opacity-75 primary-font">A playful guide to neon alleys, cafes, rooftop views, and late-night bites.</p>
+        </article>
+        <article class="blog-card rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">Beach Notes</p>
+         <h3 class="mt-3 text-2xl font-bold primary-font">Bali, beyond the obvious</h3>
+         <p class="mt-3 text-sm opacity-75 primary-font">Find quiet corners, breezy brunch spots, and scenic sunset routes.</p>
+        </article>
+        <article id="featuredBlogCard" class="blog-card rounded-[28px] border border-dashed border-white/20 bg-white/5 p-5 flex items-center justify-center min-h-[220px]">
+         <div class="text-center"><i data-lucide="newspaper" class="w-10 h-10 mx-auto mb-3"></i>
+          <p class="opacity-75 primary-font">Tap the button to reveal a featured story.</p>
+         </div>
+        </article>
+       </div>
+      </div>
+     </section>
+     <section id="payments" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Payments</p>
+       <h2 class="text-4xl font-bold mt-2 primary-font">Payment options overview</h2>
+       <p class="mt-2 opacity-75 max-w-3xl primary-font">This section presents payment information and order guidance only. No real checkout or card entry is collected here.</p>
+       <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mt-8">
+        <div class="payment-card rounded-[28px] border border-white/10 bg-white/5 p-5"><i data-lucide="wallet" class="w-8 h-8 mb-4"></i>
+         <h3 class="font-bold primary-font">Digital wallets</h3>
+         <p class="text-sm opacity-75 mt-2 primary-font">Quick, simple, and traveler-friendly options for speedy order flow.</p>
+        </div>
+        <div class="payment-card rounded-[28px] border border-white/10 bg-white/5 p-5"><i data-lucide="landmark" class="w-8 h-8 mb-4"></i>
+         <h3 class="font-bold primary-font">Bank transfer</h3>
+         <p class="text-sm opacity-75 mt-2 primary-font">Useful for larger itineraries or travel teams needing extra control.</p>
+        </div>
+        <div class="payment-card rounded-[28px] border border-white/10 bg-white/5 p-5"><i data-lucide="badge-help" class="w-8 h-8 mb-4"></i>
+         <h3 class="font-bold primary-font">Pay later hold</h3>
+         <p class="text-sm opacity-75 mt-2 primary-font">Reserve selected routes for a short time while you confirm plans.</p>
+        </div>
+        <div class="payment-card rounded-[28px] border border-white/10 bg-white/5 p-5"><i data-lucide="receipt" class="w-8 h-8 mb-4"></i>
+         <h3 class="font-bold primary-font">Instant receipts</h3>
+         <p class="text-sm opacity-75 mt-2 primary-font">Get a clean order summary right after saving your booking choice.</p>
+        </div>
+       </div>
+       <div class="mt-8 rounded-[28px] border border-white/10 bg-white/5 p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+         <div>
+          <h3 class="text-xl font-bold primary-font">Payment help</h3>
+          <p class="text-sm opacity-75 mt-1 primary-font">Open a quick guide to understand the sample payment flow.</p>
+         </div><button id="paymentGuideBtn" class="px-5 py-3 rounded-full text-slate-900 font-semibold hover:scale-[1.03] transition primary-font">View guide</button>
+        </div>
+        <div id="paymentGuide" class="hidden mt-4 text-sm opacity-85 leading-7 primary-font">
+         Choose a route, save it to Orders, review the summary, and use this section as a visual explanation area. Since this is a preview page, there is no live payment processing or card form.
+        </div>
+       </div>
+      </div>
+     </section>
+     <section id="orders" class="section-panel">
+      <div class="glass-card rounded-[34px] p-6 sm:p-8">
+       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+         <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Orders</p>
+         <h2 class="text-4xl font-bold mt-2 primary-font">Your saved trip cards</h2>
+         <p class="mt-2 opacity-75 max-w-2xl primary-font">Bookings you create on the page appear here as stylish ticket cards.</p>
+        </div><button id="clearOrdersBtn" class="px-5 py-3 rounded-full border border-white/15 hover:bg-white/10 transition primary-font">Clear saved orders</button>
+       </div>
+       <div id="ordersEmpty" class="mt-8 rounded-[28px] border border-dashed border-white/20 bg-white/5 p-8 text-center primary-font">
+        No orders yet. Create a sample booking from the home section to see it here.
+       </div>
+       <div id="ordersGrid" class="grid lg:grid-cols-2 gap-5 mt-8"></div>
+      </div>
+     </section>
+     <section id="status" class="section-panel">
+      <div class="grid lg:grid-cols-[0.95fr_1.05fr] gap-6">
+       <div class="glass-card rounded-[34px] p-6 sm:p-8">
+        <p class="uppercase tracking-[0.35em] text-xs opacity-70 primary-font">Flight status</p>
+        <h2 class="text-4xl font-bold mt-2 primary-font">Track a sample journey</h2>
+        <p class="mt-2 opacity-75 primary-font">Enter a sample code like SJ208, SJ551, SJ777, or SJ909 to view animated trip status details.</p>
+        <form id="statusForm" class="mt-6 space-y-4">
+         <div><label for="statusCode" class="block text-sm mb-2 font-medium primary-font">Flight code</label> <input id="statusCode" type="text" placeholder="SJ208" class="w-full rounded-2xl px-4 py-3 bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/20">
+         </div><button type="submit" class="w-full rounded-2xl py-3 font-bold text-slate-900 transition hover:scale-[1.02] primary-font" id="statusSearchBtn">Check status</button>
+        </form>
+        <div class="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-5">
+         <h3 class="font-semibold primary-font">Popular sample searches</h3>
+         <div class="flex flex-wrap gap-2 mt-3"><button class="status-chip px-3 py-2 rounded-full border border-white/15 hover:bg-white/10 primary-font">SJ208</button> <button class="status-chip px-3 py-2 rounded-full border border-white/15 hover:bg-white/10 primary-font">SJ551</button> <button class="status-chip px-3 py-2 rounded-full border border-white/15 hover:bg-white/10 primary-font">SJ777</button> <button class="status-chip px-3 py-2 rounded-full border border-white/15 hover:bg-white/10 primary-font">SJ909</button>
+         </div>
+        </div>
+       </div>
+       <div class="glass-card rounded-[34px] p-6 sm:p-8">
+        <div id="statusResult" class="h-full flex items-center justify-center text-center">
+         <div>
+          <div class="w-20 h-20 rounded-full bg-white/10 mx-auto flex items-center justify-center mb-4"><i data-lucide="radar" class="w-10 h-10"></i>
+          </div>
+          <h3 class="text-2xl font-bold primary-font">Waiting for a flight code</h3>
+          <p class="mt-2 opacity-75 primary-font">Track a sample route and see its gate, departure, and live-style progress.</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </section>
+    </div>
+   </main>
+   <footer class="relative z-10 px-4 sm:px-6 lg:px-10 pb-8">
+    <div class="max-w-7xl mx-auto glass-card rounded-[28px] px-6 py-5">
+     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <p id="footerText" class="opacity-80 primary-font">SkyJoy Airlines • Designed for happy travel planning and playful route discovery.</p>
+      <div class="flex items-center gap-3 text-sm opacity-75 primary-font"><span class="inline-flex items-center gap-2"><i data-lucide="plane"></i> Explore</span> <span class="inline-flex items-center gap-2"><i data-lucide="luggage"></i> Prepare</span> <span class="inline-flex items-center gap-2"><i data-lucide="sun"></i> Fly</span>
+      </div>
+     </div>
+    </div>
+   </footer>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: "#081120",
+      surface_color: "#10233f",
+      text_color: "#f8fbff",
+      primary_action_color: "#ffb703",
+      secondary_action_color: "#7bdff2",
+      font_family: "Outfit",
+      font_size: 16,
+      hero_title: "Book your next sky adventure",
+      hero_subtitle: "Explore handpicked destinations, dreamy travel galleries, and a cheerful booking flow made for modern travelers.",
+      primary_button_text: "Explore Flights",
+      secondary_button_text: "View Deals",
+      about_title: "Why travelers love flying with us",
+      about_text: "SkyJoy Airlines is designed around breezy planning, cheerful experiences, and feel-good travel moments from takeoff to touchdown.",
+      footer_text: "SkyJoy Airlines • Designed for happy travel planning and playful route discovery."
+    };
+
+    const destinations = [
+      { id: 1, name: "Bali", country: "Indonesia", mood: "beach", price: 389, blurb: "Temple sunsets, surfing mornings, and leafy hideaways.", colors: ["from-cyan-300/30","via-teal-300/20","to-emerald-700/30"], tag: "Popular" },
+      { id: 2, name: "Paris", country: "France", mood: "romance", price: 629, blurb: "Golden boulevards, café corners, and sparkling river nights.", colors: ["from-amber-300/30","via-rose-300/20","to-pink-700/30"], tag: "Classic" },
+      { id: 3, name: "Seoul", country: "South Korea", mood: "city", price: 472, blurb: "Neon streets, rooftop views, and trend-forward neighborhoods.", colors: ["from-violet-300/30","via-fuchsia-300/20","to-indigo-700/30"], tag: "Buzzing" },
+      { id: 4, name: "Santorini", country: "Greece", mood: "romance", price: 544, blurb: "Cliffside stays, blue domes, and dreamy sea horizons.", colors: ["from-sky-300/30","via-blue-300/20","to-cyan-700/30"], tag: "Sunset" },
+      { id: 5, name: "Maldives", country: "Maldives", mood: "beach", price: 715, blurb: "Lagoon villas, barefoot luxury, and glassy turquoise water.", colors: ["from-emerald-300/30","via-cyan-300/20","to-blue-700/30"], tag: "Luxury" },
+      { id: 6, name: "New York", country: "USA", mood: "city", price: 688, blurb: "Skylines, jazz bars, bright lights, and endless energy.", colors: ["from-slate-300/30","via-blue-300/20","to-indigo-700/30"], tag: "Fast-paced" }
+    ];
+
+    const galleryItems = [
+      { title: "Cloudline Window", place: "Dubai route", gradient: "from-sky-300/30 via-blue-300/20 to-indigo-700/30" },
+      { title: "Lagoon Reflection", place: "Maldives", gradient: "from-teal-300/30 via-cyan-300/20 to-blue-700/30" },
+      { title: "Neon Avenue", place: "Seoul", gradient: "from-fuchsia-300/30 via-violet-300/20 to-indigo-700/30" },
+      { title: "Sunset Balcony", place: "Santorini", gradient: "from-orange-300/30 via-pink-300/20 to-rose-700/30" },
+      { title: "Tropical Path", place: "Bali", gradient: "from-emerald-300/30 via-lime-300/20 to-teal-700/30" },
+      { title: "City Glow", place: "New York", gradient: "from-slate-300/30 via-zinc-300/20 to-blue-700/30" }
+    ];
+
+    const statusMap = {
+      SJ208: { route: "Singapore → Bali", state: "Boarding", gate: "A12", time: "18:40", color: "#7bdff2", note: "On time and boarding now." },
+      SJ551: { route: "Dubai → Paris", state: "Delayed", gate: "C07", time: "21:15", color: "#ffb703", note: "Delayed by 35 minutes due to air traffic." },
+      SJ777: { route: "Tokyo → Seoul", state: "Departed", gate: "B03", time: "09:20", color: "#48bb78", note: "Flight departed and is now cruising." },
+      SJ909: { route: "London → New York", state: "Landed", gate: "D18", time: "14:05", color: "#c084fc", note: "Flight landed smoothly and arrived at gate." }
+    };
+
+    let savedOrders = [];
+    let latestBooking = null;
+
+    const starfield = document.getElementById('starfield');
+    for (let i = 0; i < 34; i++) {
+      const star = document.createElement('span');
+      const size = Math.random() * 3 + 1;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.animationDuration = (Math.random() * 5 + 3) + 's';
+      star.style.animationDelay = (Math.random() * 5) + 's';
+      starfield.appendChild(star);
+    }
+
+    function applyTheme(config) {
+      const background = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const primary = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+      const font = config.font_family || defaultConfig.font_family;
+      const base = config.font_size || defaultConfig.font_size;
+
+      document.documentElement.style.setProperty('--background-color', background);
+      document.documentElement.style.setProperty('--surface-color', surface);
+      document.documentElement.style.setProperty('--text-color', text);
+      document.documentElement.style.setProperty('--primary-action-color', primary);
+      document.documentElement.style.setProperty('--secondary-action-color', secondary);
+
+      document.body.style.background = `
+        radial-gradient(circle at 15% 20%, ${hexToRgba(secondary, 0.18)}, transparent 22%),
+        radial-gradient(circle at 85% 15%, ${hexToRgba(primary, 0.18)}, transparent 24%),
+        radial-gradient(circle at 60% 80%, rgba(255,255,255,0.08), transparent 20%),
+        linear-gradient(145deg, ${background} 0%, ${shadeHex(background, 14)} 45%, ${shadeHex(background, 24)} 100%)
+      `;
+
+      const primaryFontStack = `${font}, 'Outfit', sans-serif`;
+      const accentFontStack = `${font}, 'Cormorant Garamond', serif`;
+
+      document.querySelectorAll('.primary-font').forEach(el => {
+        el.style.fontFamily = primaryFontStack;
+      });
+      document.querySelectorAll('.hero-title').forEach(el => {
+        el.style.fontFamily = accentFontStack;
+      });
+
+      document.body.style.color = text;
+
+      const heroTitle = document.getElementById('heroTitle');
+      const heroSubtitle = document.getElementById('heroSubtitle');
+      const aboutTitle = document.getElementById('aboutTitle');
+      const aboutText = document.getElementById('aboutText');
+      const footerText = document.getElementById('footerText');
+      const primaryCta = document.getElementById('primaryCta');
+      const secondaryCta = document.getElementById('secondaryCta');
+      const searchButton = document.getElementById('searchButton');
+      const saveOrderBtn = document.getElementById('saveOrderBtn');
+      const trackTripBtn = document.getElementById('trackTripBtn');
+      const hotDealBadge = document.getElementById('hotDealBadge');
+      const shuffleGalleryBtn = document.getElementById('shuffleGalleryBtn');
+      const paymentGuideBtn = document.getElementById('paymentGuideBtn');
+      const loadBlogBtn = document.getElementById('loadBlogBtn');
+      const statusSearchBtn = document.getElementById('statusSearchBtn');
+      const brandMark = document.getElementById('brandMark');
+      const heroOrbOne = document.getElementById('heroOrbOne');
+      const heroOrbTwo = document.getElementById('heroOrbTwo');
+
+      heroTitle.textContent = config.hero_title || defaultConfig.hero_title;
+      heroSubtitle.textContent = config.hero_subtitle || defaultConfig.hero_subtitle;
+      aboutTitle.textContent = config.about_title || defaultConfig.about_title;
+      aboutText.textContent = config.about_text || defaultConfig.about_text;
+      footerText.textContent = config.footer_text || defaultConfig.footer_text;
+      primaryCta.textContent = config.primary_button_text || defaultConfig.primary_button_text;
+      secondaryCta.textContent = config.secondary_button_text || defaultConfig.secondary_button_text;
+
+      heroTitle.style.fontSize = `${base * 3.2}px`;
+      heroSubtitle.style.fontSize = `${base * 1.05}px`;
+      aboutTitle.style.fontSize = `${base * 2}px`;
+      aboutText.style.fontSize = `${base}px`;
+      footerText.style.fontSize = `${base * 0.9}px`;
+
+      [primaryCta, searchButton, saveOrderBtn, shuffleGalleryBtn, paymentGuideBtn, loadBlogBtn, statusSearchBtn, ...document.querySelectorAll('.career-apply-btn')].forEach(btn => {
+        if (btn) {
+          btn.style.backgroundColor = primary;
+          btn.style.color = '#081120';
+        }
+      });
+
+      [secondaryCta, trackTripBtn, ...document.querySelectorAll('.filter-btn'), ...document.querySelectorAll('.nav-link'), ...document.querySelectorAll('[data-section-jump]'), document.getElementById('clearOrdersBtn'), ...document.querySelectorAll('.status-chip')].forEach(btn => {
+        if (btn) {
+          btn.style.borderColor = hexToRgba(secondary, 0.35);
+        }
+      });
+
+      hotDealBadge.style.backgroundColor = primary;
+      brandMark.style.backgroundColor = primary;
+      heroOrbOne.style.background = primary;
+      heroOrbTwo.style.background = secondary;
+    }
+
+    function hexToRgba(hex, alpha) {
+      const safeHex = hex.replace('#', '');
+      const bigint = parseInt(safeHex, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function shadeHex(hex, amount) {
+      const safeHex = hex.replace('#', '');
+      let r = parseInt(safeHex.substring(0, 2), 16);
+      let g = parseInt(safeHex.substring(2, 4), 16);
+      let b = parseInt(safeHex.substring(4, 6), 16);
+      r = Math.max(0, Math.min(255, r + amount));
+      g = Math.max(0, Math.min(255, g + amount));
+      b = Math.max(0, Math.min(255, b + amount));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function renderRecommendations() {
+      const container = document.getElementById('recommendationList');
+      container.innerHTML = '';
+      destinations.slice(0, 4).forEach(item => {
+        const card = document.createElement('button');
+        card.className = `destination-card text-left rounded-[26px] p-4 border border-white/10 bg-gradient-to-br ${item.colors.join(' ')} glass-card`;
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs uppercase opacity-70 primary-font">${item.country}</p>
+              <h3 class="text-xl font-bold primary-font">${item.name}</h3>
+            </div>
+            <span class="text-xs px-3 py-1 rounded-full bg-white/15 primary-font">${item.tag}</span>
+          </div>
+          <p class="mt-3 text-sm opacity-80 primary-font">${item.blurb}</p>
+          <div class="mt-4 flex items-center justify-between">
+            <span class="font-semibold primary-font">From $${item.price}</span>
+            <span class="text-sm opacity-80 primary-font">Book →</span>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          document.getElementById('toCity').value = item.name;
+          showSection('home');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        container.appendChild(card);
+      });
+    }
+
+    function renderDestinations(filter = 'all') {
+      const grid = document.getElementById('destinationGrid');
+      grid.innerHTML = '';
+      destinations
+        .filter(item => filter === 'all' ? true : item.mood === filter)
+        .forEach(item => {
+          const card = document.createElement('div');
+          card.className = `destination-card rounded-[30px] p-5 border border-white/10 bg-gradient-to-br ${item.colors.join(' ')} relative overflow-hidden`;
+          card.innerHTML = `
+            <div class="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/15 text-xs primary-font">${item.tag}</div>
+            <p class="text-xs uppercase tracking-[0.25em] opacity-70 primary-font">${item.country}</p>
+            <h3 class="text-3xl font-bold mt-3 primary-font">${item.name}</h3>
+            <p class="mt-3 text-sm opacity-80 leading-6 primary-font">${item.blurb}</p>
+            <div class="mt-6 flex items-center justify-between">
+              <div>
+                <p class="text-xs opacity-65 primary-font">Starting fare</p>
+                <p class="text-2xl font-extrabold primary-font">$${item.price}</p>
+              </div>
+              <button class="book-destination-btn px-4 py-2 rounded-full text-slate-900 font-semibold primary-font" data-name="${item.name}">Choose</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+      applyTheme(window.elementSdk ? window.elementSdk.config : defaultConfig);
+
+      document.querySelectorAll('.book-destination-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('toCity').value = btn.dataset.name;
+          showSection('home');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    }
+
+    function renderGallery() {
+      const grid = document.getElementById('galleryGrid');
+      grid.innerHTML = '';
+      galleryItems.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = `gallery-card rounded-[30px] h-64 border border-white/10 p-5 flex flex-col justify-between bg-gradient-to-br ${item.gradient} ${index % 2 === 0 ? 'soft-float' : 'soft-float-delay'}`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <span class="px-3 py-1 rounded-full bg-white/15 text-xs primary-font">${item.place}</span>
+            <i data-lucide="image" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-[0.25em] opacity-70 primary-font">Travel gallery</p>
+            <h3 class="text-2xl font-bold mt-2 primary-font">${item.title}</h3>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function shuffleGallery() {
+      galleryItems.sort(() => Math.random() - 0.5);
+      renderGallery();
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section-panel').forEach(section => {
+        section.classList.toggle('active', section.id === sectionId);
+      });
+      document.querySelectorAll('.nav-link').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === sectionId);
+      });
+    }
+
+    function createBookingSummary(data) {
+      const priceLookup = destinations.find(item => item.name === data.to) || destinations[0];
+      latestBooking = {
+        id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+        from: data.from,
+        to: data.to,
+        date: data.date || 'Flexible date',
+        travelers: data.travelers,
+        price: priceLookup.price
+      };
+
+      document.getElementById('resultRoute').textContent = `${data.from} → ${data.to}`;
+      document.getElementById('resultMeta').textContent = `${latestBooking.date} • ${data.travelers} traveler${data.travelers > 1 ? 's' : ''}`;
+      document.getElementById('resultPrice').textContent = `$${priceLookup.price}`;
+      document.getElementById('bookingResult').classList.remove('hidden');
+    }
+
+    function renderOrders() {
+      const ordersGrid = document.getElementById('ordersGrid');
+      const empty = document.getElementById('ordersEmpty');
+      ordersGrid.innerHTML = '';
+
+      if (!savedOrders.length) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      savedOrders.forEach(order => {
+        const card = document.createElement('div');
+        card.className = 'order-card ticket-cut relative rounded-[30px] border border-white/10 bg-white/5 p-6 overflow-hidden';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">Saved order</p>
+              <h3 class="text-2xl font-bold mt-2 primary-font">${order.from} → ${order.to}</h3>
+              <p class="mt-1 text-sm opacity-75 primary-font">${order.date} • ${order.travelers} traveler${order.travelers > 1 ? 's' : ''}</p>
+            </div>
+            <span class="px-3 py-2 rounded-full bg-white/10 text-sm primary-font">${order.id}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mt-6">
+            <div>
+              <p class="text-xs opacity-60 primary-font">Fare</p>
+              <p class="font-bold text-lg primary-font">$${order.price}</p>
+            </div>
+            <div>
+              <p class="text-xs opacity-60 primary-font">Status</p>
+              <p class="font-bold text-lg primary-font">Planned</p>
+            </div>
+            <div>
+              <p class="text-xs opacity-60 primary-font">Cabin</p>
+              <p class="font-bold text-lg primary-font">Economy</p>
+            </div>
+          </div>
+        `;
+        ordersGrid.appendChild(card);
+      });
+    }
+
+    function showCareerMessage(text) {
+      const box = document.getElementById('careerMessage');
+      box.textContent = text;
+      box.classList.remove('hidden');
+    }
+
+    function revealFeaturedBlog() {
+      const card = document.getElementById('featuredBlogCard');
+      card.innerHTML = `
+        <div>
+          <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">Featured Story</p>
+          <h3 class="mt-3 text-2xl font-bold primary-font">How to plan a soft adventure trip</h3>
+          <p class="mt-3 text-sm opacity-75 primary-font">Mix one iconic sight, one local café, one slow evening walk, and one surprise stop to keep your trip balanced and memorable.</p>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function renderStatus(code) {
+      const data = statusMap[code.toUpperCase()];
+      const container = document.getElementById('statusResult');
+
+      if (!data) {
+        container.innerHTML = `
+          <div class="text-center">
+            <div class="w-20 h-20 rounded-full bg-white/10 mx-auto flex items-center justify-center mb-4">
+              <i data-lucide="search-x" class="w-10 h-10"></i>
+            </div>
+            <h3 class="text-2xl font-bold primary-font">Flight not found</h3>
+            <p class="mt-2 opacity-75 primary-font">Try one of the sample codes shown on the left.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="w-full rounded-[30px] border border-white/10 bg-white/5 p-6 text-left">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.25em] opacity-65 primary-font">Live-style status</p>
+              <h3 class="text-3xl font-bold mt-2 primary-font">${code.toUpperCase()}</h3>
+            </div>
+            <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:${hexToRgba(data.color,0.18)}; color:${data.color};">
+              <i data-lucide="plane"></i>
+            </div>
+          </div>
+
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs opacity-60 primary-font">Route</p>
+              <p class="font-semibold mt-1 primary-font">${data.route}</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs opacity-60 primary-font">Gate</p>
+              <p class="font-semibold mt-1 primary-font">${data.gate}</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs opacity-60 primary-font">Time</p>
+              <p class="font-semibold mt-1 primary-font">${data.time}</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p class="text-xs opacity-60 primary-font">Status</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="status-dot" style="background:${data.color};"></span>
+                <p class="font-semibold primary-font">${data.state}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-3xl p-4" style="background:${hexToRgba(data.color,0.14)};">
+            <p class="primary-font">${data.note}</p>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    document.querySelectorAll('.nav-link').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.section));
+    });
+
+    document.querySelectorAll('[data-section-jump]').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.sectionJump));
+    });
+
+    document.getElementById('primaryCta').addEventListener('click', () => showSection('destinations'));
+    document.getElementById('secondaryCta').addEventListener('click', () => showSection('gallery'));
+
+    document.getElementById('bookingForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      createBookingSummary({
+        from: document.getElementById('fromCity').value,
+        to: document.getElementById('toCity').value,
+        date: document.getElementById('departDate').value,
+        travelers: Number(document.getElementById('travelers').value)
+      });
+    });
+
+    document.getElementById('saveOrderBtn').addEventListener('click', () => {
+      if (!latestBooking) return;
+      savedOrders.unshift({ ...latestBooking });
+      renderOrders();
+      showSection('orders');
+    });
+
+    document.getElementById('trackTripBtn').addEventListener('click', () => {
+      showSection('status');
+      document.getElementById('statusCode').value = 'SJ208';
+      renderStatus('SJ208');
+    });
+
+    document.getElementById('clearOrdersBtn').addEventListener('click', () => {
+      savedOrders = [];
+      renderOrders();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(item => item.classList.remove('active', 'bg-white/10'));
+        btn.classList.add('active', 'bg-white/10');
+        renderDestinations(btn.dataset.filter);
+      });
+    });
+
+    document.getElementById('shuffleGalleryBtn').addEventListener('click', shuffleGallery);
+
+    document.querySelectorAll('.career-apply-btn').forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        const roles = ['Cabin Crew Host', 'Airport Experience Lead', 'Travel Content Writer'];
+        showCareerMessage(`Thanks for your interest in the ${roles[index]} role. This demo page has marked your interest visually.`);
+      });
+    });
+
+    document.getElementById('loadBlogBtn').addEventListener('click', revealFeaturedBlog);
+
+    document.getElementById('paymentGuideBtn').addEventListener('click', () => {
+      document.getElementById('paymentGuide').classList.toggle('hidden');
+    });
+
+    document.getElementById('statusForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      renderStatus(document.getElementById('statusCode').value.trim());
+    });
+
+    document.querySelectorAll('.status-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('statusCode').value = btn.textContent.trim();
+        renderStatus(btn.textContent.trim());
+      });
+    });
+
+    renderRecommendations();
+    renderDestinations();
+    renderGallery();
+    renderOrders();
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyTheme(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (value) => {
+                config.surface_color = value;
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.primary_action_color || defaultConfig.primary_action_color,
+              set: (value) => {
+                config.primary_action_color = value;
+                window.elementSdk.setConfig({ primary_action_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+              set: (value) => {
+                config.secondary_action_color = value;
+                window.elementSdk.setConfig({ secondary_action_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['hero_title', config.hero_title || defaultConfig.hero_title],
+          ['hero_subtitle', config.hero_subtitle || defaultConfig.hero_subtitle],
+          ['primary_button_text', config.primary_button_text || defaultConfig.primary_button_text],
+          ['secondary_button_text', config.secondary_button_text || defaultConfig.secondary_button_text],
+          ['about_title', config.about_title || defaultConfig.about_title],
+          ['about_text', config.about_text || defaultConfig.about_text],
+          ['footer_text', config.footer_text || defaultConfig.footer_text]
+        ])
+      });
+    }
+
+    applyTheme(window.elementSdk ? window.elementSdk.config : defaultConfig);
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e4078d330099a55',t:'MTc3NDgwNDA1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
